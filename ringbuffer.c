@@ -59,11 +59,11 @@ FUNC_ATTR
 uint16_t rb_read(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
     for (i = 0; i < len; i++) {
+        if (b->reader == b->writer) {
+            return i;
+        }
         data[i] = b->blob[b->reader];
         rb_reader_skip(b, 1);
-        if (b->reader == b->writer) {
-            return i + 1;
-        }
     }
     return len;
 }
