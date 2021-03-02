@@ -104,6 +104,9 @@ void test_write_read() {
     tmplen += rb_read(&b, tmp + tmplen, 2);
     eqint(tmplen, 13); 
     eqnstr(tmp, "abcdefghijklm", 13);
+    
+    /* Read when no data available */
+    eqint(rb_read(&b, tmp, 2), 0);
 }
 
 
