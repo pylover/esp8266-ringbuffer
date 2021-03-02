@@ -12,19 +12,14 @@
 #define RB_OK                0
 #define RB_ERR_INSUFFICIENT     -1
 
-//#define CIRC_CNT(head,tail,size) (((head) - (tail)) & ((size)-1))
 
-#define rb_calc(rb, f, n) (((n) + (f)) & ((rb)->size - 1))
-
-#define rb_used(rb) (((rb)->reader > (rb)->writer? (rb)->size: 0) + \
-        (rb)->writer - (rb)->reader)
-#define rb_available(rb) ((rb)->size - rb_used(rb) - 1)
-
-#define rb_writer_calc(rb, n) rb_calc(rb, (rb)->writer, n)
-#define rb_reader_calc(rb, n) rb_calc(rb, (rb)->reader, n)
-
-#define rb_reset(rb) (rb)->reader = (rb)->writer = 0
-#define rb_reader_skip(rb, n) (rb)->reader = rb_reader_calc(rb, n)
+#define RB_CALC(b, n)         ((n) & ((b)->size - 1))
+#define RB_USED(b)            RB_CALC(b, (b)->writer - (b)->reader)
+#define RB_AVAILABLE(b)       RB_CALC(b, (b)->reader - ((b)->writer + 1))
+#define RB_WRITER_MOVE(b, n)  RB_CALC(b, (b)->writer + (n))
+#define RB_READER_MOVE(b, n)  RB_CALC(b, (b)->reader + (n))
+#define RB_READER_SKIP(b, n)  (b)->reader = RB_READER_MOVE(b, n)
+#define RB_RESET(b) (b)->reader = (b)->writer = 0
 
 
 typedef signed char rberr_t; 

@@ -4,14 +4,14 @@
 
 FUNC_ATTR
 rberr_t rb_pushone(struct ringbuffer *b, char byte) {
-    uint16_t writernext = rb_writer_calc(b, 1);
+    uint16_t writernext = RB_WRITER_MOVE(b, 1);
     if (writernext == b->reader) {
         switch (b->overflow) {
             case RB_OVERFLOW_ERROR:
                 return RB_ERR_INSUFFICIENT;
             case RB_OVERFLOW_IGNORE_OLDER:
                 /* Ignore one byte and forward reader's needle one step */
-                rb_reader_skip(b, 1);
+                RB_READER_SKIP(b, 1);
                 break;
             case RB_OVERFLOW_IGNORE_NEWER:
                 /* Ignore the newly received byte */
@@ -29,7 +29,7 @@ FUNC_ATTR
 rberr_t rb_write(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
     
-    if ((b->overflow == RB_OVERFLOW_ERROR) && (rb_available(b) < len)) {
+    if ((b->overflow == RB_OVERFLOW_ERROR) && (RB_AVAILABLE(b) < len)) {
         return RB_ERR_INSUFFICIENT;
     }
 
@@ -59,7 +59,7 @@ rbsize_t rb_read(struct ringbuffer *b, char *data, uint16_t len) {
             return i;
         }
         data[i] = b->blob[b->reader];
-        rb_reader_skip(b, 1);
+        RB_READER_SKIP(b, 1);
     }
     return len;
 }
@@ -70,7 +70,7 @@ rbsize_t rb_dryread(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
     uint16_t n;
     for (i = 0; i < len; i++) {
-        n = rb_reader_calc(b, i);
+        n = RB_READER_MOVE(b, i);
         if (n == b->writer) {
             return i;
         }
