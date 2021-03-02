@@ -24,6 +24,7 @@
 
 
 typedef signed char rberr_t; 
+typedef unsigned int rbsize_t; 
 
 
 enum rb_overflow {
@@ -42,26 +43,13 @@ struct ringbuffer{
 };
 
 
-uint16_t rb_read(struct ringbuffer *b, char *data, uint16_t len);
+rbsize_t rb_read(struct ringbuffer *b, char *data, uint16_t len);
+rbsize_t rb_dryread(struct ringbuffer *b, char *data, uint16_t len);
 
 rberr_t rb_pushone(struct ringbuffer *rb, char byte);
 rberr_t rb_write(struct ringbuffer *b, char *data, uint16_t len);
 void rb_init(struct ringbuffer *b, char *buff, uint16_t size, 
         enum rb_overflow overflow);
 
-/*
-void rb_write(RingBuffer *rb, char *data, uint16_t datalen);
-void rb_readone(RingBuffer *rb, char *data);
-void rb_read(RingBuffer *rb, char *data, uint16_t datalen);
-void rb_dryread(RingBuffer *rb, char *data, uint16_t datalen);
-void rb_skip(RingBuffer *rb, uint16_t datalen);
-int rb_safewrite(RingBuffer *rb, char *data, uint16_t datalen);
-int rb_saferead(RingBuffer *rb, char *data, uint16_t datalen);
-void rb_reset(RingBuffer *rb);
-
-#define rb_skip(rb, s) rb_increment(rb, (rb)->reader, s)
-#define rb_canwrite(rb, len) (len <= rb_available(rb))
-#define rb_canread(rb, len) (len <= rb_used(rb))
-*/
 #endif
 

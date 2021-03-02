@@ -1,6 +1,11 @@
 CC = gcc
 LIBS = 
-CFLAGS = -Wall -I.
+CFLAGS = \
+	-fprofile-arcs \
+	-ftest-coverage \
+	-Wall \
+	-I.
+
 OBJECTS = ringbuffer.o 
 
 ringbuffer.o: ringbuffer.c ringbuffer.h

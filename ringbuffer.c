@@ -2,10 +2,6 @@
 #include "ringbuffer.h"
 
 
-//#define rb_increment_writer(rb) (rb)->writer = rb_writer_next(rb)
-//#define rb_calc(rb, i, s) (((s) + (i)) % (rb)->size)
-
-
 FUNC_ATTR
 rberr_t rb_pushone(struct ringbuffer *b, char byte) {
     uint16_t writernext = rb_writer_calc(b, 1);
@@ -56,7 +52,7 @@ void rb_init(struct ringbuffer *b, char *buff, uint16_t size,
 
 
 FUNC_ATTR
-uint16_t rb_read(struct ringbuffer *b, char *data, uint16_t len) {
+rbsize_t rb_read(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
     for (i = 0; i < len; i++) {
         if (b->reader == b->writer) {
@@ -70,7 +66,7 @@ uint16_t rb_read(struct ringbuffer *b, char *data, uint16_t len) {
 
 
 FUNC_ATTR
-uint16_t rb_dryread(struct ringbuffer *b, char *data, uint16_t len) {
+rbsize_t rb_dryread(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
     uint16_t n;
     for (i = 0; i < len; i++) {
