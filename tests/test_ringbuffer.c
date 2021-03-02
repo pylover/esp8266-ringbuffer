@@ -99,27 +99,44 @@ void test_write_read() {
     tmplen += rb_read(&b, tmp + tmplen, 2);
     eqint(tmplen, 10); 
     eqnstr(tmp, "abcdefghij", 10);
+}
+
+
+void test_dry_read() {
+    #define S   8
+    char tmp[256];
+    int tmplen = 0;
+    char buff[S];
+    struct ringbuffer b;
+    rb_init(&b, buff, S, RB_OVERFLOW_ERROR);
 
     /* Dry Read */
-    tmplen = 0;
-    rb_reset(&b);
-    eqint(rb_write(&b, "abcd", 4), RB_OK);
-    tmplen += rb_dryread(&b, tmp + tmplen, 10);
-    eqint(tmplen, 4); 
-    eqnstr(buff, "abcd", 4);
-    eqnstr(tmp, "abcd", 4);
-    eqint(b.writer, 4);
+    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
+    tmplen += rb_dryread(&b, tmp + tmplen, 2);
+    eqint(tmplen, 2); 
+    eqnstr(buff, "abcdefg", 7);
+    eqnstr(tmp, "ab", 2);
+    eqint(b.writer, 7);
     eqint(b.reader, 0);
+
+    rb_reader_skip(&b, 2);
+    tmplen += rb_dryread(&b, tmp + tmplen, 10);
+    eqint(tmplen, 7); 
+    eqnstr(buff, "abcdefg", 7);
+    eqnstr(tmp, "abcdefg", 7);
+    eqint(b.writer, 7);
+    eqint(b.reader, 2);
     
     /* Skip */
-    rb_reader_skip(&b, 2);
-    eqint(b.reader, 2);
-    eqint(rb_available(&b), 2);
+    rb_reader_skip(&b, 4);
+    eqint(b.reader, 6);
+    eqint(rb_available(&b), 6);
 }
 
 
 int main() {
     test_pushone();
     test_write_read();
+    test_dry_read();
 }
 

@@ -1,14 +1,13 @@
+INCLUDES=-I. 
 CC = gcc
 LIBS = 
 CFLAGS = \
-	-fprofile-arcs \
-	-ftest-coverage \
-	-Wall \
-	-I.
+	-Wall 
 
 OBJECTS = ringbuffer.o 
 
 ringbuffer.o: ringbuffer.c ringbuffer.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $^ $(LIBS)
 
 .PHONY: clean 
 clean:

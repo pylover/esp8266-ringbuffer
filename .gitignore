@@ -52,6 +52,12 @@ Mkfile.old
 dkms.conf
 
 # Vim
-
-# Vim
 .*.sw[op]
+
+# gcov
+*.gcov
+*.gcda
+*.gcno
+
+# Project specific
+test_ringbuffer
