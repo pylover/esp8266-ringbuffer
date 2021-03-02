@@ -99,6 +99,22 @@ void test_write_read() {
     tmplen += rb_read(&b, tmp + tmplen, 2);
     eqint(tmplen, 10); 
     eqnstr(tmp, "abcdefghij", 10);
+
+    /* Dry Read */
+    tmplen = 0;
+    rb_reset(&b);
+    eqint(rb_write(&b, "abcd", 4), RB_OK);
+    tmplen += rb_dryread(&b, tmp + tmplen, 10);
+    eqint(tmplen, 4); 
+    eqnstr(buff, "abcd", 4);
+    eqnstr(tmp, "abcd", 4);
+    eqint(b.writer, 4);
+    eqint(b.reader, 0);
+    
+    /* Skip */
+    rb_reader_skip(&b, 2);
+    eqint(b.reader, 2);
+    eqint(rb_available(&b), 2);
 }
 
 

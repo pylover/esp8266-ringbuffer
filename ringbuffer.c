@@ -5,20 +5,17 @@
 //#define rb_increment_writer(rb) (rb)->writer = rb_writer_next(rb)
 //#define rb_calc(rb, i, s) (((s) + (i)) % (rb)->size)
 
-#define rb_writer_next(rb) ((1 + (rb)->writer) % (rb)->size)
-#define rb_reader_next(rb) ((1 + (rb)->reader) % (rb)->size)
-#define rb_increment_reader(rb) (rb)->reader = rb_reader_next(rb)
 
 FUNC_ATTR
 rberr_t rb_pushone(struct ringbuffer *b, char byte) {
-    uint16_t writernext = rb_writer_next(b);
+    uint16_t writernext = rb_writer_calc(b, 1);
     if (writernext == b->reader) {
         switch (b->overflow) {
             case RB_OVERFLOW_ERROR:
                 return RB_ERR_INSUFFICIENT;
             case RB_OVERFLOW_IGNORE_OLDER:
                 /* Ignore one byte and forward reader's needle one step */
-                rb_increment_reader(b);
+                rb_reader_skip(b, 1);
                 break;
             case RB_OVERFLOW_IGNORE_NEWER:
                 /* Ignore the newly received byte */
@@ -63,7 +60,7 @@ uint16_t rb_read(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
     for (i = 0; i < len; i++) {
         data[i] = b->blob[b->reader];
-        rb_increment_reader(b);
+        rb_reader_skip(b, 1);
         if (b->reader == b->writer) {
             return i + 1;
         }
@@ -72,16 +69,17 @@ uint16_t rb_read(struct ringbuffer *b, char *data, uint16_t len) {
 }
 
 
-/*
-
-
-ICACHE_FLASH_ATTR
-void rb_dryread(RingBuffer *rb, char *data, uint16_t datalen) {
+FUNC_ATTR
+uint16_t rb_dryread(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
-    for (i = 0; i < datalen; i++) {
-        data[i] = rb->blob[rb_calc(rb, rb->reader, i)];
+    uint16_t n;
+    for (i = 0; i < len; i++) {
+        n = rb_reader_calc(b, i);
+        if (n == b->writer) {
+            return i;
+        }
+        data[i] = b->blob[n];
     }
+    return len;
 }
 
-
-*/
