@@ -24,8 +24,8 @@ void test_pushone() {
     eqint(rb_pushone(&b, 'd'), RB_OK);
     eqint(rb_available(&b), 0);
 
-    eqint(rb_pushone(&b, 'e'), RB_ERR_FULL);
-    eqint(rb_pushone(&b, 'f'), RB_ERR_FULL);
+    eqint(rb_pushone(&b, 'e'), RB_ERR_INSUFFICIENT);
+    eqint(rb_pushone(&b, 'f'), RB_ERR_INSUFFICIENT);
     eqint(rb_available(&b), 0);
     eqnstr(buff, "abcd", 4);
     eqint(b.writer, 4);
@@ -54,14 +54,16 @@ void test_pushone() {
 }
 
 
-void test_push() {
+void test_write_read() {
     #define S   5
+    char tmp[256];
+    int tmplen = 0;
     char buff[S];
     struct ringbuffer b;
     rb_init(&b, buff, S, RB_OVERFLOW_ERROR);
 
-    eqint(rb_push(&b, "abcde", 5), RB_ERR_INSUFFICIENT);
-    eqint(rb_push(&b, "abcd", 4), RB_OK);
+    eqint(rb_write(&b, "abcde", 5), RB_ERR_INSUFFICIENT);
+    eqint(rb_write(&b, "abcd", 4), RB_OK);
     eqnstr(buff, "abcd", 4);
     
     rb_reset(&b);
@@ -69,18 +71,39 @@ void test_push() {
     /* Change overflow strategy */
     b.overflow = RB_OVERFLOW_IGNORE_NEWER;
     rb_reset(&b);
-    eqint(rb_push(&b, "abcdefg", 7), RB_OK);
-    eqnstr(buff, "abcde", 5);
+    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
+    eqnstr(buff, "abcd", 4);
 
     b.overflow = RB_OVERFLOW_IGNORE_OLDER;
     rb_reset(&b);
-    eqint(rb_push(&b, "abcdefg", 7), RB_OK);
+    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
     eqnstr(buff, "fgcde", 5);
+   
+    /* Write & Read */
+    rb_reset(&b);
+    eqint(rb_write(&b, "abcd", 4), RB_OK);
+    eqint(b.writer, 4);
+    tmplen += rb_read(&b, tmp + tmplen, 10);
+    eqint(tmplen, 4); 
+    eqnstr(tmp, "abcd", 4);
+    eqint(b.writer, 4);
+    eqint(b.reader, 4);
+    eqint(rb_available(&b), 4);
+
+    eqint(rb_write(&b, "ef", 2), RB_OK);
+    tmplen += rb_read(&b, tmp + tmplen, 10);
+    eqint(tmplen, 6); 
+
+    eqint(rb_write(&b, "ghij", 4), RB_OK);
+    tmplen += rb_read(&b, tmp + tmplen, 2);
+    tmplen += rb_read(&b, tmp + tmplen, 2);
+    eqint(tmplen, 10); 
+    eqnstr(tmp, "abcdefghij", 10);
 }
 
 
 int main() {
     test_pushone();
-    test_push();
+    test_write_read();
 }
 

@@ -15,7 +15,7 @@ rberr_t rb_pushone(struct ringbuffer *b, char byte) {
     if (writernext == b->reader) {
         switch (b->overflow) {
             case RB_OVERFLOW_ERROR:
-                return RB_ERR_FULL;
+                return RB_ERR_INSUFFICIENT;
             case RB_OVERFLOW_IGNORE_OLDER:
                 /* Ignore one byte and forward reader's needle one step */
                 rb_increment_reader(b);
@@ -33,9 +33,8 @@ rberr_t rb_pushone(struct ringbuffer *b, char byte) {
 
 
 FUNC_ATTR
-rberr_t rb_push(struct ringbuffer *b, char *data, uint16_t len) {
+rberr_t rb_write(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
-    rberr_t err;
     
     if ((b->overflow == RB_OVERFLOW_ERROR) && (rb_available(b) < len)) {
         return RB_ERR_INSUFFICIENT;
@@ -57,39 +56,27 @@ void rb_init(struct ringbuffer *b, char *buff, uint16_t size,
     b->blob = buff;
     b->overflow = overflow;
 }
-/*
-ICACHE_FLASH_ATTR
-void rb_pop(RingBuffer *rb, char *data, uint16_t datalen) {
+
+
+FUNC_ATTR
+uint16_t rb_read(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
-    for (i = 0; i < datalen; i++) {
-        data[i] = rb->blob[rb->reader];
-        rb_increment(rb, rb->reader, 1); 
+    for (i = 0; i < len; i++) {
+        data[i] = b->blob[b->reader];
+        rb_increment_reader(b);
+        if (b->reader == b->writer) {
+            return i + 1;
+        }
     }
+    return len;
 }
 
 
-ICACHE_FLASH_ATTR
-int rb_safepush(RingBuffer *rb, char *data, uint16_t datalen) {
-    if (rb_canpush(rb, datalen)) {
-        rb_push(rb, data, datalen);
-        return RB_OK;
-    }
-    return RB_FULL;
-}
+/*
 
 
 ICACHE_FLASH_ATTR
-int rb_safepop(RingBuffer *rb, char *data, uint16_t datalen) {
-    if (rb_canpop(rb, datalen)) {
-        rb_pop(rb, data, datalen);
-        return RB_OK;
-    }
-    return RB_INSUFFICIENT;
-}
-
-
-ICACHE_FLASH_ATTR
-void rb_drypop(RingBuffer *rb, char *data, uint16_t datalen) {
+void rb_dryread(RingBuffer *rb, char *data, uint16_t datalen) {
     uint16_t i;
     for (i = 0; i < datalen; i++) {
         data[i] = rb->blob[rb_calc(rb, rb->reader, i)];

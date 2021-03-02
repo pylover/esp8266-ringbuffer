@@ -10,8 +10,7 @@
 
 
 #define RB_OK                0
-#define RB_ERR_FULL             -1
-#define RB_ERR_INSUFFICIENT     -2
+#define RB_ERR_INSUFFICIENT     -1
 
 
 #define rb_reset(rb) (rb)->reader = (rb)->writer = 0
@@ -41,24 +40,26 @@ struct ringbuffer{
 };
 
 
+uint16_t rb_read(struct ringbuffer *b, char *data, uint16_t len);
+
 rberr_t rb_pushone(struct ringbuffer *rb, char byte);
-rberr_t rb_push(struct ringbuffer *b, char *data, uint16_t len);
+rberr_t rb_write(struct ringbuffer *b, char *data, uint16_t len);
 void rb_init(struct ringbuffer *b, char *buff, uint16_t size, 
         enum rb_overflow overflow);
 
 /*
-void rb_push(RingBuffer *rb, char *data, uint16_t datalen);
-void rb_popone(RingBuffer *rb, char *data);
-void rb_pop(RingBuffer *rb, char *data, uint16_t datalen);
-void rb_drypop(RingBuffer *rb, char *data, uint16_t datalen);
+void rb_write(RingBuffer *rb, char *data, uint16_t datalen);
+void rb_readone(RingBuffer *rb, char *data);
+void rb_read(RingBuffer *rb, char *data, uint16_t datalen);
+void rb_dryread(RingBuffer *rb, char *data, uint16_t datalen);
 void rb_skip(RingBuffer *rb, uint16_t datalen);
-int rb_safepush(RingBuffer *rb, char *data, uint16_t datalen);
-int rb_safepop(RingBuffer *rb, char *data, uint16_t datalen);
+int rb_safewrite(RingBuffer *rb, char *data, uint16_t datalen);
+int rb_saferead(RingBuffer *rb, char *data, uint16_t datalen);
 void rb_reset(RingBuffer *rb);
 
 #define rb_skip(rb, s) rb_increment(rb, (rb)->reader, s)
-#define rb_canpush(rb, len) (len <= rb_available(rb))
-#define rb_canpop(rb, len) (len <= rb_used(rb))
+#define rb_canwrite(rb, len) (len <= rb_available(rb))
+#define rb_canread(rb, len) (len <= rb_used(rb))
 */
 #endif
 
