@@ -4,13 +4,10 @@
 
 //#define rb_increment_writer(rb) (rb)->writer = rb_writer_next(rb)
 //#define rb_calc(rb, i, s) (((s) + (i)) % (rb)->size)
-//#define rb_used(rb) (((rb)->reader > (rb)->writer? (rb)->size: 0) + (rb)->writer - (rb)->reader)
-//#define rb_available(rb) ((rb)->size - rb_used(rb) - 1)
 
 #define rb_writer_next(rb) ((1 + (rb)->writer) % (rb)->size)
 #define rb_reader_next(rb) ((1 + (rb)->reader) % (rb)->size)
 #define rb_increment_reader(rb) (rb)->reader = rb_reader_next(rb)
-
 
 FUNC_ATTR
 rberr_t rb_pushone(struct ringbuffer *b, char byte) {
@@ -39,11 +36,13 @@ FUNC_ATTR
 rberr_t rb_push(struct ringbuffer *b, char *data, uint16_t len) {
     uint16_t i;
     rberr_t err;
+    
+    if ((b->overflow == RB_OVERFLOW_ERROR) && (rb_available(b) < len)) {
+        return RB_ERR_INSUFFICIENT;
+    }
+
     for(i = 0; i < len; i++) {
-        err = rb_pushone(b, data[i]);
-        if (err) {
-            return err;
-        }
+        rb_pushone(b, data[i]);
     }
     return RB_OK;
 }
@@ -98,9 +97,4 @@ void rb_drypop(RingBuffer *rb, char *data, uint16_t datalen) {
 }
 
 
-ICACHE_FLASH_ATTR
-void rb_reset(RingBuffer *rb) {
-    rb->reader = 0;
-    rb->writer = 0;
-}
 */

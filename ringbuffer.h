@@ -14,6 +14,14 @@
 #define RB_ERR_INSUFFICIENT     -2
 
 
+#define rb_reset(rb) (rb)->reader = (rb)->writer = 0
+#define rb_used(rb) (((rb)->reader > (rb)->writer? (rb)->size: 0) + \
+        (rb)->writer - (rb)->reader)
+
+#define rb_available(rb) ((rb)->size - rb_used(rb) - 1)
+
+
+
 typedef signed char rberr_t; 
 
 
