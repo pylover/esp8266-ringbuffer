@@ -5,9 +5,6 @@
 /* Platform Specific Options */
 #include <stdint.h>  // For uintx_t
 
-#define FUNC_ATTR   
-// TODO: ICACHE_FLASH_ATTR
-
 
 #define RB_OK                0
 #define RB_ERR_INSUFFICIENT     -1
