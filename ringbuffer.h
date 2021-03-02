@@ -12,12 +12,16 @@
 #define RB_OK                0
 #define RB_ERR_INSUFFICIENT     -1
 
+//#define CIRC_CNT(head,tail,size) (((head) - (tail)) & ((size)-1))
+
+#define rb_calc(rb, f, n) (((n) + (f)) & ((rb)->size - 1))
 
 #define rb_used(rb) (((rb)->reader > (rb)->writer? (rb)->size: 0) + \
         (rb)->writer - (rb)->reader)
 #define rb_available(rb) ((rb)->size - rb_used(rb) - 1)
-#define rb_writer_calc(rb, n) (((n) + (rb)->writer) % (rb)->size)
-#define rb_reader_calc(rb, n) (((n) + (rb)->reader) % (rb)->size)
+
+#define rb_writer_calc(rb, n) rb_calc(rb, (rb)->writer, n)
+#define rb_reader_calc(rb, n) rb_calc(rb, (rb)->reader, n)
 
 #define rb_reset(rb) (rb)->reader = (rb)->writer = 0
 #define rb_reader_skip(rb, n) (rb)->reader = rb_reader_calc(rb, n)
