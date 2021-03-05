@@ -4,9 +4,9 @@
 #include "ringbuffer.h"
 #include "testing.h"
 
+#define S   8
 
 void test_pushone() {
-    #define S   8
     char buff[S];
     struct ringbuffer b;
     rb_init(&b, buff, S, RB_OVERFLOW_ERROR);
@@ -59,7 +59,6 @@ void test_pushone() {
 
 
 void test_write_read() {
-    #define S   8
     char tmp[256];
     int tmplen = 0;
     char buff[S];
@@ -111,7 +110,6 @@ void test_write_read() {
 
 
 void test_dry_read() {
-    #define S   8
     char tmp[256];
     int tmplen = 0;
     char buff[S];
@@ -142,9 +140,44 @@ void test_dry_read() {
 }
 
 
+void test_read_until() {
+    char tmp[256];
+    rb_size_t tmplen = 0;
+    char buff[S];
+    struct ringbuffer b;
+    rb_init(&b, buff, S, RB_OVERFLOW_ERROR);
+
+    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
+    eqint(rb_read_until(&b, tmp, 7, "de", 2, &tmplen), RB_OK);
+    eqint(tmplen, 5); 
+    eqnstr(tmp, "abc", 3);
+    eqint(b.writer, 7);
+    eqint(b.reader, 5);
+    
+    tmplen = 0;
+    RB_RESET(&b);
+    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
+    eqint(rb_read_until(&b, tmp, 7, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
+    eqint(tmplen, 0); 
+    eqnstr(tmp, "abcdefg", 7);
+    eqint(b.writer, 7);
+    eqint(b.reader, 0);
+
+    tmplen = 0;
+    RB_RESET(&b);
+    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
+    eqint(rb_read_until(&b, tmp, 8, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
+    eqint(tmplen, 0); 
+    eqnstr(tmp, "abcdefg", 7);
+    eqint(b.writer, 7);
+    eqint(b.reader, 0);
+}
+
+
 int main() {
     test_pushone();
     test_write_read();
     test_dry_read();
+    test_read_until();
 }
 
