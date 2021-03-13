@@ -1,110 +1,119 @@
 #include "ringbuffer.h"
 
+#define _GNU_SOURCE         /* See feature_test_macros(7) */
+#include <string.h>
+#include <osapi.h>
 
-FUNC_ATTR
-rberr_t rb_pushone(struct ringbuffer *b, char byte) {
-    rb_size_t writernext = RB_WRITER_MOVE(b, 1);
-    if (writernext == b->reader) {
-        switch (b->overflow) {
-            case RB_OVERFLOW_ERROR:
-                return RB_ERR_INSUFFICIENT;
-            case RB_OVERFLOW_IGNORE_OLDER:
-                /* Ignore one byte and forward reader's needle one step */
-                RB_READER_SKIP(b, 1);
-                break;
-            case RB_OVERFLOW_IGNORE_NEWER:
-                /* Ignore the newly received byte */
-                return RB_OK;
-        }
-    }
-
-    b->blob[b->writer] = byte;
-    b->writer = writernext;
-    return RB_OK;
-}
+#define MIN(x, y) (((x) > (y))? (y): (x))
 
 
-FUNC_ATTR
-rberr_t rb_write(struct ringbuffer *b, char *data, rb_size_t len) {
-    rb_size_t i;
+ICACHE_FLASH_ATTR
+httpd_err_t rb_write(struct ringbuffer *b, char *data, size16_t len) {
     
-    if ((b->overflow == RB_OVERFLOW_ERROR) && (RB_AVAILABLE(b) < len)) {
+    if (RB_AVAILABLE(b) < len) {
         return RB_ERR_INSUFFICIENT;
     }
+    
+    size16_t toend = RB_FREE_TOEND(b);
+    size16_t chunklen = MIN(toend, len);
+    os_memcpy(b->blob + b->writer, data, chunklen);
+    b->writer = RB_WRITER_CALC(b, chunklen);
+    b->writecounter += chunklen;
 
-    for(i = 0; i < len; i++) {
-        rb_pushone(b, data[i]);
+    if (len > chunklen) {
+        len -= chunklen;
+        os_memcpy(b->blob, data + chunklen, len);
+        b->writer += len;
+        b->writecounter += len;
     }
     return RB_OK;
 }
 
 
-FUNC_ATTR
-rb_size_t rb_read(struct ringbuffer *b, char *data, rb_size_t len) {
-    rb_size_t i;
-    for (i = 0; i < len; i++) {
-        if (b->reader == b->writer) {
-            return i;
-        }
-        data[i] = b->blob[b->reader];
-        RB_READER_SKIP(b, 1);
+ICACHE_FLASH_ATTR
+size16_t rb_read(struct ringbuffer *b, char *data, size16_t len) {
+    size16_t toend = RB_USED_TOEND(b);
+    size16_t total = MIN(toend, len);
+    os_memcpy(data, b->blob + b->reader, total);
+    b->reader = RB_READER_CALC(b, total);
+    len -= total;
+
+    if (len) {
+        len = MIN(RB_USED_TOEND(b), len);
+        os_memcpy(data + total, b->blob, len);
+        b->reader += len;
+        total += len;
     }
-    return len;
+   
+    return total;
 }
 
 
-FUNC_ATTR
-rb_size_t rb_dryread(struct ringbuffer *b, char *data, rb_size_t len) {
-    rb_size_t i;
-    rb_size_t n;
-    for (i = 0; i < len; i++) {
-        n = RB_READER_MOVE(b, i);
-        if (n == b->writer) {
-            return i;
-        }
-        data[i] = b->blob[n];
+ICACHE_FLASH_ATTR
+size16_t rb_dryread(struct ringbuffer *b, char *data, size16_t len) {
+    size16_t toend = RB_USED_TOEND(b);
+    size16_t total = MIN(toend, len);
+    os_memcpy(data, b->blob + b->reader, total);
+    len -= total;
+
+    if (len) {
+        len = MIN(RB_USED(b) - total, len);
+        os_memcpy(data + total, b->blob, len);
+        total += len;
     }
-    return len;
+    return total;
 }
 
 
-FUNC_ATTR
-rberr_t rb_read_until(struct ringbuffer *b, char *data, rb_size_t len,
-        char *delimiter, rb_size_t dlen, rb_size_t *readlen) {
-    rb_size_t i, n, mlen = 0;
-    char tmp; 
-
-    for (i = 0; i < len; i++) {
-        n = RB_READER_MOVE(b, i);
-        if (n == b->writer) {
-            return RB_ERR_NOTFOUND;
-        }
-        tmp = b->blob[n];
-        data[i] = tmp;
-        if (tmp == delimiter[mlen]) {
-           mlen++;
-           if (mlen == dlen) {
-               *readlen = i + 1;
-               RB_READER_SKIP(b, *readlen);
-               return RB_OK;
-           }
-        }
-        else if (mlen > 0) {
-            mlen = 0;
-        }
+ICACHE_FLASH_ATTR
+httpd_err_t rb_read_until(struct ringbuffer *b, char *data, size16_t len,
+        char *delimiter, size16_t dlen, size16_t *readlen) {
+    size16_t rl = rb_dryread(b, data, len);
+    char *f = memmem(data, rl, delimiter, dlen);
+    if (f == NULL) {
+        return RB_ERR_NOTFOUND;
     }
-    return RB_ERR_NOTFOUND;
+    *readlen = (f - data) + dlen;
+    b->reader = RB_READER_CALC(b, *readlen);
+    return RB_OK;
 }
 
 
-FUNC_ATTR
-void rb_init(struct ringbuffer *b, char *buff, rb_size_t size,
-        enum rb_overflow overflow) {
+ICACHE_FLASH_ATTR
+httpd_err_t rb_dryread_until(struct ringbuffer *b, char *data, size16_t len,
+        char *delimiter, size16_t dlen, size16_t *readlen) {
+    size16_t rl = rb_dryread(b, data, len);
+    char *f = memmem(data, rl, delimiter, dlen);
+    if (f == NULL) {
+        return RB_ERR_NOTFOUND;
+    }
+    *readlen = (f - data) + dlen;
+    return RB_OK;
+}
+
+
+ICACHE_FLASH_ATTR
+httpd_err_t rb_read_until_chr(struct ringbuffer *b, char *data, size16_t len,
+        char delimiter, size16_t *readlen) {
+
+    size16_t rl = rb_dryread(b, data, len);
+    char *f = memchr(data, delimiter, rl);
+    if (f == NULL) {
+        return RB_ERR_NOTFOUND;
+    }
+    *readlen = (f - data) + 1;
+    b->reader = RB_READER_CALC(b, *readlen);
+    return RB_OK;
+}
+
+
+ICACHE_FLASH_ATTR
+void rb_init(struct ringbuffer *b, char *buff, size16_t size) {
     b->size = size;
     b->reader = 0;
     b->writer = 0;
+    b->writecounter = 0;
     b->blob = buff;
-    b->overflow = overflow;
 }
 
 

@@ -1,34 +1,28 @@
-INCLUDES=-I. 
+SRC = ..
+INCLUDES=-I./include -I$(SRC)
 CC = gcc
 LIBS = 
 CFLAGS = \
 	-g \
 	-fprofile-arcs \
 	-ftest-coverage \
-	-DFUNC_ATTR=\
+	-DTESTING=1 \
+	-DICACHE_FLASH_ATTR= \
 	-Wall 
 
-TESTS = ./tests
-OBJECTS = ringbuffer.o 
 
 all: test_ringbuffer
 
 
-ringbuffer.o: ringbuffer.c ringbuffer.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $< $(LIBS)
+ringbuffer.o: $(SRC)/ringbuffer.c $(SRC)/ringbuffer.h
+	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@ $(LIBS)
 
-
-$(TESTS)/testing.o: $(TESTS)/testing.c $(TESTS)/testing.h
-	$(CC) $(CFLAGS) $(INCLUDES) -I$(TESTS) -c -o $@ $< $(LIBS)
-
-
-test_ringbuffer: $(TESTS)/test_ringbuffer.c ringbuffer.o $(TESTS)/testing.o
-	$(CC) $(CFLAGS) $(INCLUDES) -I$(TESTS) -o $@ $^ $(LIBS)
-
+test_ringbuffer: test_ringbuffer.c ringbuffer.o
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
 .PHONY: clean 
 clean:
-	-rm -f $(OBJECTS)
+	-rm -f ./*.o
 	-rm test_ringbuffer
 	-rm *.gcov *.gcda *.gcno
 
