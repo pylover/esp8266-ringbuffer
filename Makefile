@@ -12,6 +12,7 @@
 #     a generated lib/image xxx.a ()
 #
 ifndef PDIR
+SUBDIRS = 
 GEN_LIBS = libringbuffer.a
 endif
 
