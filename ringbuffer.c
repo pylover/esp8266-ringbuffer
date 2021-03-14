@@ -70,6 +70,9 @@ httpd_err_t rb_read_until(struct ringbuffer *b, char *data, size16_t len,
         char *delimiter, size16_t dlen, size16_t *readlen) {
     size16_t rl = rb_dryread(b, data, len);
     *readlen = rl;
+    if (rl <= 0) {
+        return RB_ERR_NOTFOUND;
+    }
     char *f = memmem(data, rl, delimiter, dlen);
     if (f == NULL) {
         return RB_ERR_NOTFOUND;
@@ -85,6 +88,9 @@ httpd_err_t rb_dryread_until(struct ringbuffer *b, char *data, size16_t len,
         char *delimiter, size16_t dlen, size16_t *readlen) {
     size16_t rl = rb_dryread(b, data, len);
     *readlen = rl;
+    if (rl <= 0) {
+        return RB_ERR_NOTFOUND;
+    }
     char *f = memmem(data, rl, delimiter, dlen);
     if (f == NULL) {
         return RB_ERR_NOTFOUND;
@@ -99,6 +105,9 @@ httpd_err_t rb_read_until_chr(struct ringbuffer *b, char *data, size16_t len,
         char delimiter, size16_t *readlen) {
     size16_t rl = rb_dryread(b, data, len);
     *readlen = rl;
+    if (rl <= 0) {
+        return RB_ERR_NOTFOUND;
+    }
     char *f = memchr(data, delimiter, rl);
     if (f == NULL) {
         return RB_ERR_NOTFOUND;

@@ -120,6 +120,13 @@ void test_read_until() {
     eqint(b.writer, 7);
     eqint(b.reader, 0);
     eqint(b.writecounter, 7);
+
+    eqint(rb_read_until(&b, tmp, 8, "fg", 2, &tmplen), RB_OK);
+    eqint(tmplen, 7); 
+    
+    eqint(rb_read_until(&b, tmp, 8, "yz", 2, &tmplen), RB_ERR_NOTFOUND);
+    eqint(tmplen, 0); 
+
 }
 
 
@@ -157,6 +164,11 @@ void test_read_until_chr() {
     eqint(b.writer, 7);
     eqint(b.reader, 0);
     eqint(b.writecounter, 7);
+
+    eqint(rb_read_until_chr(&b, tmp, 7, 'g', &tmplen), RB_OK);
+    eqint(tmplen, 7); 
+    eqint(rb_read_until_chr(&b, tmp, 7, 'z', &tmplen), RB_ERR_NOTFOUND);
+    eqint(tmplen, 0); 
 } 
 
 
@@ -194,6 +206,12 @@ void test_dryread_until() {
     eqint(b.writer, 7);
     eqint(b.reader, 0);
     eqint(b.writecounter, 7);
+
+    eqint(rb_read_until(&b, tmp, 8, "fg", 2, &tmplen), RB_OK);
+    eqint(tmplen, 7); 
+
+    eqint(rb_dryread_until(&b, tmp, 8, "yz", 2, &tmplen), RB_ERR_NOTFOUND);
+    eqint(tmplen, 0); 
 }
 
 
