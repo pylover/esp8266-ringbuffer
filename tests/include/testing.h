@@ -8,11 +8,11 @@
 #include <stdint.h>
 
 
-void equalchr(const char given, const char expected);
-void equalstr(const char *given, const char *expected);
-void equalnstr(const char *given, const char *expected, uint32_t len);
-void equalbin(const unsigned char *given, const unsigned char *, uint32_t len);
-void equalint(int given, int expected);
+//void equalchr(const char given, const char expected);
+//void equalstr(const char *given, const char *expected);
+//void equalnstr(const char *given, const char *expected, uint32_t len);
+//void equalbin(const unsigned char *given, const unsigned char *, uint32_t len);
+//void equalint(int given, int expected);
 
 
 #define RED     "\e[0;31m"

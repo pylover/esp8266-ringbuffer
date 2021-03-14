@@ -14,41 +14,41 @@ void test_write_read() {
     struct ringbuffer b;
     rb_init(&b, buff, S);
 
-    eqint(rb_write(&b, "abcdefgh", 8), RB_ERR_INSUFFICIENT);
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqnstr(buff, "abcdefg", 7);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(RB_ERR_INSUFFICIENT, rb_write(&b, "abcdefgh", 8));
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqnstr("abcdefg", buff, 7);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
    
     /* Write & Read */
     RB_RESET(&b);
-    eqint(b.writecounter, 0);
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(b.writer, 7);
+    eqint(0, b.writecounter);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(7, b.writer);
     tmplen += rb_read(&b, tmp + tmplen, 10);
-    eqint(tmplen, 7); 
-    eqnstr(tmp, "abcdefg", 7);
-    eqint(b.writer, 7);
-    eqint(b.reader, 7);
-    eqint(RB_AVAILABLE(&b), 7);
-    eqint(b.writecounter, 7);
+    eqint(7, tmplen); 
+    eqnstr("abcdefg", tmp, 7);
+    eqint(7, b.writer);
+    eqint(7, b.reader);
+    eqint(7, RB_AVAILABLE(&b));
+    eqint(7, b.writecounter);
 
-    eqint(rb_write(&b, "hi", 2), RB_OK);
+    eqint(RB_OK, rb_write(&b, "hi", 2));
     tmplen += rb_read(&b, tmp + tmplen, 10);
-    eqint(tmplen, 9); 
-    eqint(b.writecounter, 9);
+    eqint(9, tmplen); 
+    eqint(9, b.writecounter);
 
-    eqint(rb_write(&b, "jklm", 4), RB_OK);
+    eqint(RB_OK, rb_write(&b, "jklm", 4));
     tmplen += rb_read(&b, tmp + tmplen, 2);
     tmplen += rb_read(&b, tmp + tmplen, 2);
-    eqint(tmplen, 13); 
-    eqnstr(tmp, "abcdefghijklm", 13);
-    eqint(b.writecounter, 13);
+    eqint(13, tmplen); 
+    eqnstr("abcdefghijklm", tmp, 13);
+    eqint(13, b.writecounter);
     
     /* Read when no data available */
-    eqint(rb_read(&b, tmp, 2), 0);
-    eqint(b.writecounter, 13);
+    eqint(0, rb_read(&b, tmp, 2));
+    eqint(13, b.writecounter);
 }
 
 
@@ -60,29 +60,29 @@ void test_dryread() {
     rb_init(&b, buff, S);
 
     /* Dry Read */
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
     tmplen += rb_dryread(&b, tmp + tmplen, 2);
-    eqint(tmplen, 2); 
-    eqnstr(buff, "abcdefg", 7);
-    eqnstr(tmp, "ab", 2);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(2, tmplen); 
+    eqnstr("abcdefg", buff, 7);
+    eqnstr("ab", tmp, 2);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
 
     RB_READER_SKIP(&b, 2);
     tmplen += rb_dryread(&b, tmp + tmplen, 10);
-    eqint(tmplen, 7); 
-    eqnstr(buff, "abcdefg", 7);
-    eqnstr(tmp, "abcdefg", 7);
-    eqint(b.writer, 7);
-    eqint(b.reader, 2);
-    eqint(b.writecounter, 7);
+    eqint(7, tmplen); 
+    eqnstr("abcdefg", buff, 7);
+    eqnstr("abcdefg", tmp, 7);
+    eqint(7, b.writer);
+    eqint(2, b.reader);
+    eqint(7, b.writecounter);
     
     /* Skip */
     RB_READER_SKIP(&b, 4);
-    eqint(b.reader, 6);
-    eqint(RB_AVAILABLE(&b), 6);
-    eqint(b.writecounter, 7);
+    eqint(6, b.reader);
+    eqint(6, RB_AVAILABLE(&b));
+    eqint(7, b.writecounter);
 }
 
 
@@ -93,40 +93,39 @@ void test_read_until() {
     struct ringbuffer b;
     rb_init(&b, buff, S);
 
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_read_until(&b, tmp, 7, "de", 2, &tmplen), RB_OK);
-    eqint(tmplen, 5); 
-    eqnstr(tmp, "abc", 3);
-    eqint(b.writer, 7);
-    eqint(b.reader, 5);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_OK, rb_read_until(&b, tmp, 7, "de", 2, &tmplen));
+    eqint(5, tmplen); 
+    eqnstr("abc", tmp, 3);
+    eqint(7, b.writer);
+    eqint(5, b.reader);
+    eqint(7, b.writecounter);
     
     tmplen = 0;
     RB_RESET(&b);
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_read_until(&b, tmp, 7, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 7); 
-    eqnstr(tmp, "abcdefg", 7);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_ERR_NOTFOUND, rb_read_until(&b, tmp, 7, "ed", 2, &tmplen));
+    eqint(7, tmplen); 
+    eqnstr("abcdefg", tmp, 7);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_read_until(&b, tmp, 8, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 7); 
-    eqnstr(tmp, "abcdefg", 7);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_ERR_NOTFOUND, rb_read_until(&b, tmp, 8, "ed", 2, &tmplen));
+    eqint(7, tmplen); 
+    eqnstr("abcdefg", tmp, 7);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
 
-    eqint(rb_read_until(&b, tmp, 8, "fg", 2, &tmplen), RB_OK);
-    eqint(tmplen, 7); 
+    eqint(RB_OK, rb_read_until(&b, tmp, 8, "fg", 2, &tmplen));
+    eqint(7, tmplen); 
     
-    eqint(rb_read_until(&b, tmp, 8, "yz", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
-
+    eqint(RB_ERR_NOTFOUND, rb_read_until(&b, tmp, 8, "yz", 2, &tmplen));
+    eqint(0, tmplen); 
 }
 
 
@@ -137,38 +136,38 @@ void test_read_until_chr() {
     struct ringbuffer b;
     rb_init(&b, buff, S);
 
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_read_until_chr(&b, tmp, 7, 'd', &tmplen), RB_OK);
-    eqint(tmplen, 4); 
-    eqnstr(tmp, "abcd", 4);
-    eqint(b.writer, 7);
-    eqint(b.reader, 4);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_OK, rb_read_until_chr(&b, tmp, 7, 'd', &tmplen));
+    eqint(4, tmplen); 
+    eqnstr("abcd", tmp, 4);
+    eqint(7, b.writer);
+    eqint(4, b.reader);
+    eqint(7, b.writecounter);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_read_until_chr(&b, tmp, 8, 'z', &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 7); 
-    eqnstr(tmp, "abcdefg", 7);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_ERR_NOTFOUND, rb_read_until_chr(&b, tmp, 8, 'z', &tmplen));
+    eqint(7, tmplen); 
+    eqnstr("abcdefg", tmp, 7);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_read_until_chr(&b, tmp, 4, 'z', &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 4); 
-    eqnstr(tmp, "abcd", 4);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_ERR_NOTFOUND, rb_read_until_chr(&b, tmp, 4, 'z', &tmplen));
+    eqint(4, tmplen); 
+    eqnstr("abcd", tmp, 4);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
 
-    eqint(rb_read_until_chr(&b, tmp, 7, 'g', &tmplen), RB_OK);
-    eqint(tmplen, 7); 
-    eqint(rb_read_until_chr(&b, tmp, 7, 'z', &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
+    eqint(RB_OK, rb_read_until_chr(&b, tmp, 7, 'g', &tmplen));
+    eqint(7, tmplen); 
+    eqint(RB_ERR_NOTFOUND, rb_read_until_chr(&b, tmp, 7, 'z', &tmplen));
+    eqint(0, tmplen); 
 } 
 
 
@@ -179,47 +178,39 @@ void test_dryread_until() {
     struct ringbuffer b;
     rb_init(&b, buff, S);
 
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_dryread_until(&b, tmp, 7, "de", 2, &tmplen), RB_OK);
-    eqint(tmplen, 5); 
-    eqnstr(tmp, "abc", 3);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_OK, rb_dryread_until(&b, tmp, 7, "de", 2, &tmplen));
+    eqint(5, tmplen); 
+    eqnstr("abc", tmp, 3);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_dryread_until(&b, tmp, 7, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 7); 
-    eqnstr(tmp, "abcdefg", 7);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_ERR_NOTFOUND, rb_dryread_until(&b, tmp, 7, "ed", 2, &tmplen));
+    eqint(7, tmplen); 
+    eqnstr("abcdefg", tmp, 7);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(rb_write(&b, "abcdefg", 7), RB_OK);
-    eqint(rb_dryread_until(&b, tmp, 8, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 7); 
-    eqnstr(tmp, "abcdefg", 7);
-    eqint(b.writer, 7);
-    eqint(b.reader, 0);
-    eqint(b.writecounter, 7);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    eqint(RB_ERR_NOTFOUND, rb_dryread_until(&b, tmp, 8, "ed", 2, &tmplen));
+    eqint(7, tmplen); 
+    eqnstr("abcdefg", tmp, 7);
+    eqint(7, b.writer);
+    eqint(0, b.reader);
+    eqint(7, b.writecounter);
 
-    eqint(rb_read_until(&b, tmp, 8, "fg", 2, &tmplen), RB_OK);
-    eqint(tmplen, 7); 
-
-    eqint(rb_dryread_until(&b, tmp, 8, "yz", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
+    eqint(RB_OK, rb_read_until(&b, tmp, 8, "fg", 2, &tmplen));
+    eqint(7, tmplen); 
+    eqint(RB_ERR_NOTFOUND, rb_dryread_until(&b, tmp, 8, "yz", 2, &tmplen));
+    eqint(0, tmplen); 
 }
-
-
-/* Return space available up to the end of the buffer.  */
-#define CIRC_SPACE_TO_END(writer,reader,size) \
-	({int end = (size) - 1 - (writer); \
-	  int n = (end + (reader)) & ((size)-1); \
-	  n <= end ? n : end+1;})
 
 
 int main() {
@@ -228,8 +219,5 @@ int main() {
     test_dryread_until();
     test_read_until();
     test_read_until_chr();
-//    
-//    int i = CIRC_SPACE_TO_END(2, 6, 8);
-//    printf("Consecutive space to end: %d\n", i);
 }
 
