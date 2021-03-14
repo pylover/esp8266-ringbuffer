@@ -11,7 +11,7 @@ CFLAGS = \
 	-Wall 
 
 
-all: test_ringbuffer
+all: coverage
 
 
 ringbuffer.o: $(SRC)/ringbuffer.c $(SRC)/ringbuffer.h
@@ -28,7 +28,7 @@ clean:
 
 
 .PHONY: test
-test: all
+test: test_ringbuffer
 	./test_ringbuffer
 
 

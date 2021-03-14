@@ -105,7 +105,7 @@ void test_read_until() {
     RB_RESET(&b);
     eqint(rb_write(&b, "abcdefg", 7), RB_OK);
     eqint(rb_read_until(&b, tmp, 7, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
+    eqint(tmplen, 7); 
     eqnstr(tmp, "abcdefg", 7);
     eqint(b.writer, 7);
     eqint(b.reader, 0);
@@ -115,7 +115,7 @@ void test_read_until() {
     RB_RESET(&b);
     eqint(rb_write(&b, "abcdefg", 7), RB_OK);
     eqint(rb_read_until(&b, tmp, 8, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
+    eqint(tmplen, 7); 
     eqnstr(tmp, "abcdefg", 7);
     eqint(b.writer, 7);
     eqint(b.reader, 0);
@@ -142,7 +142,7 @@ void test_read_until_chr() {
     RB_RESET(&b);
     eqint(rb_write(&b, "abcdefg", 7), RB_OK);
     eqint(rb_read_until_chr(&b, tmp, 8, 'z', &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
+    eqint(tmplen, 7); 
     eqnstr(tmp, "abcdefg", 7);
     eqint(b.writer, 7);
     eqint(b.reader, 0);
@@ -152,7 +152,7 @@ void test_read_until_chr() {
     RB_RESET(&b);
     eqint(rb_write(&b, "abcdefg", 7), RB_OK);
     eqint(rb_read_until_chr(&b, tmp, 4, 'z', &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
+    eqint(tmplen, 4); 
     eqnstr(tmp, "abcd", 4);
     eqint(b.writer, 7);
     eqint(b.reader, 0);
@@ -179,7 +179,7 @@ void test_dryread_until() {
     RB_RESET(&b);
     eqint(rb_write(&b, "abcdefg", 7), RB_OK);
     eqint(rb_dryread_until(&b, tmp, 7, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
+    eqint(tmplen, 7); 
     eqnstr(tmp, "abcdefg", 7);
     eqint(b.writer, 7);
     eqint(b.reader, 0);
@@ -189,7 +189,7 @@ void test_dryread_until() {
     RB_RESET(&b);
     eqint(rb_write(&b, "abcdefg", 7), RB_OK);
     eqint(rb_dryread_until(&b, tmp, 8, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
-    eqint(tmplen, 0); 
+    eqint(tmplen, 7); 
     eqnstr(tmp, "abcdefg", 7);
     eqint(b.writer, 7);
     eqint(b.reader, 0);
